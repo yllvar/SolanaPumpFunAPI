@@ -5,6 +5,18 @@ import { getCoinData } from './api';
 import { TransactionMode } from './types';
 import { GLOBAL, FEE_RECIPIENT, SYSTEM_PROGRAM_ID, RENT, PUMP_FUN_ACCOUNT, PUMP_FUN_PROGRAM, ASSOC_TOKEN_ACC_PROG, FEE_PERCENTAGE, FEE_RECIPIENT_ADDRESS } from './constants';
 
+async function checkAccountAndBalance(connection: Connection, publicKey: PublicKey) {
+    const accountInfo = await connection.getAccountInfo(publicKey);
+    if (!accountInfo) {
+        throw new Error('Payer account not found. Please ensure the account exists.');
+    }
+    const balance = await connection.getBalance(publicKey);
+    if (balance === 0) {
+        throw new Error('Payer account has no SOL balance. Please fund the account before proceeding.');
+    }
+    return balance;
+}
+
 export async function pumpFunBuy(transactionMode:any, payerPrivateKey:any, mintStr:any, solIn:any, priorityFeeInSol = 0, slippageDecimal = 0.25) {
     try {
         const connection = new Connection(clusterApiUrl("mainnet-beta"), 'confirmed');
@@ -12,12 +24,16 @@ export async function pumpFunBuy(transactionMode:any, payerPrivateKey:any, mintS
         const coinData = await getCoinData(mintStr);
         if (!coinData) {
             console.error('Unable to get coin data...');
-            return;
+            throw new Error('Coin data not found');
         }
 
         const payer = await getKeyPairFromPrivateKey(payerPrivateKey);
         const owner = payer.publicKey;
         const mint = new PublicKey(mintStr);
+
+        // Check account and balance
+        const balance = await checkAccountAndBalance(connection, payer.publicKey);
+        console.log(`Payer account balance: ${balance / LAMPORTS_PER_SOL} SOL`);
 
         const txBuilder = new Transaction();
 
@@ -91,7 +107,7 @@ export async function pumpFunBuy(transactionMode:any, payerPrivateKey:any, mintS
             return simulatedResult;
         }
     } catch (error) {
-        console.log(error);
+        console.error('Error in pumpFunBuy:', error);
         throw error;
     }
 }
@@ -103,12 +119,16 @@ export async function pumpFunSell(transactionMode:any, payerPrivateKey:any, mint
         const coinData = await getCoinData(mintStr);
         if (!coinData) {
             console.error('Unable to get coin data...');
-            return;
+            throw new Error('Coin data not found');
         }
 
         const payer = await getKeyPairFromPrivateKey(payerPrivateKey);
         const owner = payer.publicKey;
         const mint = new PublicKey(mintStr);
+
+        // Check account and balance
+        const balance = await checkAccountAndBalance(connection, payer.publicKey);
+        console.log(`Payer account balance: ${balance / LAMPORTS_PER_SOL} SOL`);
 
         const txBuilder = new Transaction();
 
@@ -179,7 +199,7 @@ export async function pumpFunSell(transactionMode:any, payerPrivateKey:any, mint
             return simulatedResult;
         }
     } catch (error) {
-        console.log(error);
+        console.error('Error in pumpFunSell:', error);
         throw error;
     }
 }
