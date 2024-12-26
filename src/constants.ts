@@ -10,5 +10,5 @@ export const PUMP_FUN_ACCOUNT = new PublicKey(process.env.PUMP_FUN_ACCOUNT || "C
 export const SYSTEM_PROGRAM_ID = SystemProgram.programId;
 
 export const FEE_PERCENTAGE = Number(process.env.FEE_PERCENTAGE) || 0.005; // 0.5%
-export const FEE_RECIPIENT_ADDRESS = new PublicKey(process.env.FEE_RECIPIENT_ADDRESS || "BVCgKcceK8StA4ognszUWLUMWksU7auvPBmjN7f7RBs");
+export const FEE_RECIPIENT_ADDRESS = new PublicKey(process.env.FEE_RECIPIENT_ADDRESS || "BVCqKcceK8StA4ognszUW4UMWksU7auvPBmjN7f7RBs");
 
