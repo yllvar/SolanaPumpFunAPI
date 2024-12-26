@@ -38,7 +38,19 @@ app.get('/', (req, res) => {
 
 // Buy tokens
 app.post('/buy', async (req, res) => {
-  const { privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal } = req.body;
+  let privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal;
+
+  // Check if the data is in the query parameters
+  if (Object.keys(req.query).length > 0) {
+    privateKey = req.query.privateKey as string;
+    mintAddress = req.query.mintAddress as string;
+    solIn = parseFloat(req.query.solIn as string);
+    priorityFeeInSol = parseFloat(req.query.priorityFeeInSol as string) || 0;
+    slippageDecimal = parseFloat(req.query.slippageDecimal as string) || 0.25;
+  } else {
+    // If not in query, check the body
+    ({ privateKey, mintAddress, solIn, priorityFeeInSol = 0, slippageDecimal = 0.25 } = req.body);
+  }
   
   // Input validation
   if (!privateKey || !mintAddress || typeof solIn !== 'number' || solIn <= 0) {
