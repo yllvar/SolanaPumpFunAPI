@@ -21,12 +21,13 @@ export async function getCoinData(mintStr: string) {
         if (response.status === 200) {
             return response.data;
         } else {
-            console.error('Failed to retrieve coin data:', response.status);
-            return null;
+            throw new Error(`Failed to retrieve coin data: ${response.status}`);
         }
     } catch (error) {
-        console.error('Error fetching coin data:', error);
-        return null;
+        if (axios.isAxiosError(error)) {
+            throw new Error(`Network error: ${error.message}`);
+        }
+        throw error;
     }
 }
 
@@ -44,9 +45,9 @@ export async function analyzeCoinData(mintStr: string) {
         const analysis = {
             mintAddress: mintStr,
             totalSupply: coinData.total_supply,
-            priceChange24h: coinData.price_change_24h,
-            volume24h: coinData.volume_24h,
-            marketCap: coinData.market_cap,
+            priceChange24h: coinData.price_change_24h || 0,
+            volume24h: coinData.volume_24h || 0,
+            marketCap: coinData.market_cap || 0,
             liquidityScore: calculateLiquidityScore(coinData),
             volatilityScore: calculateVolatilityScore(coinData),
             trendIndicator: determineTrend(coinData)
@@ -61,36 +62,28 @@ export async function analyzeCoinData(mintStr: string) {
 }
 
 function calculateLiquidityScore(coinData: any): number {
-    // Liquidity score based on volume to market cap ratio
-    // Higher ratio indicates better liquidity
+    if (!coinData.volume_24h || !coinData.market_cap || coinData.market_cap === 0) {
+        return 0;
+    }
     const volumeToMarketCapRatio = coinData.volume_24h / coinData.market_cap;
-    
-    // Normalize the score to a 0-100 scale
-    // Assuming a ratio of 0.2 (20% daily volume to market cap) is excellent liquidity
     const normalizedScore = Math.min(volumeToMarketCapRatio / 0.2, 1) * 100;
-    
     return Math.round(normalizedScore);
 }
 
 function calculateVolatilityScore(coinData: any): number {
-    // Volatility score based on 24-hour price change percentage
-    // Higher absolute change indicates higher volatility
+    if (!coinData.price_change_24h) {
+        return 0;
+    }
     const absolutePriceChange = Math.abs(coinData.price_change_24h);
-    
-    // Normalize the score to a 0-100 scale
-    // Assuming a 20% daily change is considered highly volatile
     const normalizedScore = Math.min(absolutePriceChange / 20, 1) * 100;
-    
     return Math.round(normalizedScore);
 }
 
 function determineTrend(coinData: any): string {
-    const priceChange = coinData.price_change_24h;
-    const volume = coinData.volume_24h;
-    const marketCap = coinData.market_cap;
+    const priceChange = coinData.price_change_24h || 0;
+    const volume = coinData.volume_24h || 0;
+    const marketCap = coinData.market_cap || 0;
 
-    // Calculate the average daily volume (assuming we have this data)
-    // For this example, we'll use 10% of market cap as a benchmark
     const avgDailyVolume = marketCap * 0.1;
 
     if (priceChange > 5 && volume > avgDailyVolume) {
