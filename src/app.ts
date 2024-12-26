@@ -10,26 +10,10 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const baseUrl = 'https://solana-pump-fun-api-0e1d8b5ba4e9.herokuapp.com';
 
 app.use(express.json());
 app.use(helmet());
-
-// RapidAPI Authentication Middleware
-const authenticateRapidAPI = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const rapidAPIKey = req.header('X-RapidAPI-Key');
-  const rapidAPIHost = req.header('X-RapidAPI-Host');
-
-  if (!rapidAPIKey || !rapidAPIHost) {
-    return res.status(401).json({ error: 'Unauthorized: Missing RapidAPI credentials' });
-  }
-
-  // You can add additional validation here if needed
-
-  next();
-};
-
-// Apply RapidAPI authentication to all routes
-app.use(authenticateRapidAPI);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -42,6 +26,7 @@ app.use(limiter);
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to the Solana PumpFun API',
+    baseUrl,
     endpoints: {
       '/buy': 'POST - Buy PumpFun tokens',
       '/sell': 'POST - Sell PumpFun tokens',
@@ -157,6 +142,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on ${baseUrl}`);
 });
 
