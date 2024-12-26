@@ -6,15 +6,30 @@ import { TransactionMode } from './types';
 import { GLOBAL, FEE_RECIPIENT, SYSTEM_PROGRAM_ID, RENT, PUMP_FUN_ACCOUNT, PUMP_FUN_PROGRAM, ASSOC_TOKEN_ACC_PROG, FEE_PERCENTAGE, FEE_RECIPIENT_ADDRESS } from './constants';
 
 async function checkAccountAndBalance(connection: Connection, publicKey: PublicKey) {
-    const accountInfo = await connection.getAccountInfo(publicKey);
-    if (!accountInfo) {
-        throw new Error('Payer account not found. Please ensure the account exists.');
+    try {
+        const accountInfo = await connection.getAccountInfo(publicKey);
+        // Account exists but might have 0 balance
+        if (accountInfo) {
+            const balance = await connection.getBalance(publicKey);
+            if (balance === 0) {
+                throw new Error('Account has no SOL balance. Please fund the account before proceeding.');
+            }
+            return balance;
+        }
+        
+        // Account doesn't exist yet but that's okay - it's just new
+        console.log('New account detected. Proceeding with 0 balance check...');
+        const balance = await connection.getBalance(publicKey);
+        if (balance === 0) {
+            throw new Error('Account has no SOL balance. Please fund the account before proceeding.');
+        }
+        return balance;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('Failed to check account balance');
     }
-    const balance = await connection.getBalance(publicKey);
-    if (balance === 0) {
-        throw new Error('Payer account has no SOL balance. Please fund the account before proceeding.');
-    }
-    return balance;
 }
 
 export async function pumpFunBuy(transactionMode:any, payerPrivateKey:any, mintStr:any, solIn:any, priorityFeeInSol = 0, slippageDecimal = 0.25) {
@@ -30,11 +45,18 @@ export async function pumpFunBuy(transactionMode:any, payerPrivateKey:any, mintS
         const payer = await getKeyPairFromPrivateKey(payerPrivateKey);
         const owner = payer.publicKey;
         const mint = new PublicKey(mintStr);
+        console.log('Checking account:', owner.toString());
 
         // Check account and balance
-        const balance = await checkAccountAndBalance(connection, payer.publicKey);
-        console.log(`Payer account balance: ${balance / LAMPORTS_PER_SOL} SOL`);
-
+        try {
+            const balance = await checkAccountAndBalance(connection, payer.publicKey);
+            console.log(`Payer account balance: ${balance / LAMPORTS_PER_SOL} SOL`);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Balance check failed: ${error.message}`);
+            }
+            throw error;
+        }
         const txBuilder = new Transaction();
 
         const tokenAccountAddress = await getAssociatedTokenAddress(mint, owner, false);
