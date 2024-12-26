@@ -14,6 +14,23 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(helmet());
 
+// RapidAPI Authentication Middleware
+const authenticateRapidAPI = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const rapidAPIKey = req.header('X-RapidAPI-Key');
+  const rapidAPIHost = req.header('X-RapidAPI-Host');
+
+  if (!rapidAPIKey || !rapidAPIHost) {
+    return res.status(401).json({ error: 'Unauthorized: Missing RapidAPI credentials' });
+  }
+
+  // You can add additional validation here if needed
+
+  next();
+};
+
+// Apply RapidAPI authentication to all routes
+app.use(authenticateRapidAPI);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
