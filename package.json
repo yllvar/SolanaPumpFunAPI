@@ -1,0 +1,36 @@
+{
+  "name": "solana-pump-fun-api",
+  "version": "1.0.0",
+  "description": "API for Solana PumpFun token operations",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tsc",
+    "heroku-postbuild": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": ["solana", "pumpfun", "api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@solana/spl-token": "^0.4.6",
+    "@solana/web3.js": "^1.91.8",
+    "axios": "^1.6.8",
+    "bs58": "^5.0.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "dotenv": "^16.0.3",
+    "helmet": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.5"
+  }
+}
+
