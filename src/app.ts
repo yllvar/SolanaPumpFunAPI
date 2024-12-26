@@ -39,6 +39,12 @@ app.get('/', (req, res) => {
 // Buy tokens
 app.post('/buy', async (req, res) => {
   const { privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal } = req.body;
+  
+  // Input validation
+  if (!privateKey || !mintAddress || typeof solIn !== 'number' || solIn <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid input parameters' });
+  }
+
   try {
     const result = await pumpFunBuy(TransactionMode.Execution, privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal);
     res.json({ success: true, result });
@@ -62,6 +68,10 @@ app.post('/buy', async (req, res) => {
 // Sell tokens
 app.post('/sell', async (req, res) => {
   const { privateKey, mintAddress, tokenBalance, priorityFeeInSol, slippageDecimal } = req.body;
+  // Input validation
+  if (!privateKey || !mintAddress || typeof tokenBalance !== 'number' || tokenBalance <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid input parameters' });
+  }
   try {
     const result = await pumpFunSell(TransactionMode.Execution, privateKey, mintAddress, tokenBalance, priorityFeeInSol, slippageDecimal);
     res.json({ success: true, result });
@@ -144,3 +154,4 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 app.listen(port, () => {
   console.log(`Server is running on ${baseUrl}`);
 });
+
