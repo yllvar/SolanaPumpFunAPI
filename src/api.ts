@@ -34,24 +34,43 @@ export async function analyzeCoinData(mintStr: string) {
     try {
         const coinData = await getCoinData(mintStr);
         if (!coinData) {
-            return null;
+            throw new Error('Failed to fetch coin data');
         }
 
         // Perform analysis on the coin data
-        // This is a placeholder implementation. You should replace this with your actual analysis logic.
         const analysis = {
             mintAddress: mintStr,
             totalSupply: coinData.total_supply,
             priceChange24h: coinData.price_change_24h,
             volume24h: coinData.volume_24h,
             marketCap: coinData.market_cap,
-            // Add more analysis metrics as needed
+            liquidityScore: calculateLiquidityScore(coinData),
+            volatilityScore: calculateVolatilityScore(coinData),
+            trendIndicator: determineTrend(coinData)
         };
 
         return analysis;
     } catch (error) {
         console.error('Error analyzing coin data:', error);
-        return null;
+        throw error;
     }
+}
+
+function calculateLiquidityScore(coinData: any): number {
+    // Implement liquidity score calculation
+    // This is a placeholder implementation
+    return Math.min(100, (coinData.volume_24h / coinData.market_cap) * 100);
+}
+
+function calculateVolatilityScore(coinData: any): number {
+    // Implement volatility score calculation
+    // This is a placeholder implementation
+    return Math.min(100, Math.abs(coinData.price_change_24h) * 10);
+}
+
+function determineTrend(coinData: any): string {
+    if (coinData.price_change_24h > 1) return "Bullish";
+    if (coinData.price_change_24h < -1) return "Bearish";
+    return "Neutral";
 }
 
