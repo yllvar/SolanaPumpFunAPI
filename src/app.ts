@@ -31,25 +31,31 @@ app.get('/', (req, res) => {
       '/buy': 'POST - Buy PumpFun tokens',
       '/sell': 'POST - Sell PumpFun tokens',
       '/coin/:mintAddress': 'GET - Fetch coin data for a specific mint address',
-      '/analyze/:mintAddress': 'GET - Analyze coin data for a specific mint address'
+      '/analyze/:mintAddress': 'GET - Analyze coin data for a specific mint address',
+      '/ping': 'GET - Health check endpoint'
     }
   });
 });
 
+// Health check endpoint
+app.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'API is up and running' });
+});
+
 // Buy tokens
 app.post('/buy', async (req, res) => {
-  let privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal;
+  console.log('Received buy request:');
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+  let { privateKey, mintAddress, solIn, priorityFeeInSol, slippageDecimal } = req.body;
 
-  // Check if the data is in the query parameters
+  // If the data is in query parameters, use those instead
   if (Object.keys(req.query).length > 0) {
     privateKey = req.query.privateKey as string;
     mintAddress = req.query.mintAddress as string;
     solIn = parseFloat(req.query.solIn as string);
     priorityFeeInSol = parseFloat(req.query.priorityFeeInSol as string) || 0;
     slippageDecimal = parseFloat(req.query.slippageDecimal as string) || 0.25;
-  } else {
-    // If not in query, check the body
-    ({ privateKey, mintAddress, solIn, priorityFeeInSol = 0, slippageDecimal = 0.25 } = req.body);
   }
   
   // Input validation
@@ -79,7 +85,17 @@ app.post('/buy', async (req, res) => {
 
 // Sell tokens
 app.post('/sell', async (req, res) => {
-  const { privateKey, mintAddress, tokenBalance, priorityFeeInSol, slippageDecimal } = req.body;
+  let { privateKey, mintAddress, tokenBalance, priorityFeeInSol, slippageDecimal } = req.body;
+
+  // If the data is in query parameters, use those instead
+  if (Object.keys(req.query).length > 0) {
+    privateKey = req.query.privateKey as string;
+    mintAddress = req.query.mintAddress as string;
+    tokenBalance = parseFloat(req.query.tokenBalance as string);
+    priorityFeeInSol = parseFloat(req.query.priorityFeeInSol as string) || 0;
+    slippageDecimal = parseFloat(req.query.slippageDecimal as string) || 0.25;
+  }
+
   // Input validation
   if (!privateKey || !mintAddress || typeof tokenBalance !== 'number' || tokenBalance <= 0) {
     return res.status(400).json({ success: false, error: 'Invalid input parameters' });
