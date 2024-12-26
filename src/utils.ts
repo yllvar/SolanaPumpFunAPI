@@ -3,9 +3,18 @@ import { Connection, PublicKey, Transaction, TransactionInstruction, sendAndConf
 import bs58 from 'bs58';
 
 export async function getKeyPairFromPrivateKey(key: string) {
-    return Keypair.fromSecretKey(
-        new Uint8Array(bs58.decode(key))
-    );
+    try {
+        const decodedKey = bs58.decode(key);
+        if (decodedKey.length !== 64) {
+            throw new Error('Invalid private key length');
+        }
+        const keypair = Keypair.fromSecretKey(decodedKey);
+        console.log('Generated public key:', keypair.publicKey.toString());
+        return keypair;
+    } catch (error) {
+        console.error('Error generating keypair:', error);
+        throw new Error('Failed to generate keypair from private key');
+    }
 }
 
 export async function createTransaction(
